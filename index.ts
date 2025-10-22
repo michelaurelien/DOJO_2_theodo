@@ -4,28 +4,39 @@ function handlePreFlightRequest(): Response {
     headers: {
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Headers": "content-type",
+      "Access-Control-Allow-Methods": "POST, OPTIONS",
     },
   });
 }
 
 async function handler(_req: Request): Promise<Response> {
   if (_req.method == "OPTIONS") {
-    handlePreFlightRequest();
+    return handlePreFlightRequest();
   }
 
+  let body;
+  try {
+    body = await req.json(); // par ex. { word1: "centrale", word2: "supelec" }
+  } catch (err) {
+    return new Response(JSON.stringify({ error: "Invalid JSON body" }), {
+      status: 400,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Content-Type": "application/json",
+      },
+    });
+  }
+  
   const headers = new Headers();
   headers.append("Content-Type", "application/json");
-
-  const similarityRequestBody = JSON.stringify({
-    word1: "centrale",
-    word2: "supelec",
-  });
-
+  
   const requestOptions = {
     method: "POST",
-    headers: headers,
-    body: similarityRequestBody,
-    redirect: "follow",
+    headers,
+    body: JSON.stringify({
+      word1: body.word1,
+      word2: body.word2,
+    }),
   };
 
   try {
